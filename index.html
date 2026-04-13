@@ -278,7 +278,7 @@ const DEFAULTS={
   '요트':{subtitle:'요트 시설',d1:'총무부',d2:'복지사업부',tel:'02-3779-4958',yr:CY,pn:'안전 수칙 미준수로 인한 사고 발생 시 전적으로 이용자 본인 책임입니다.',note:'요트 이용 전 안전 브리핑에 반드시 참석해 주세요. 미이수자는 탑승이 제한됩니다.',req:['승선 전 구명조끼 착용 필수 (전원)','음주 후 탑승 절대 금지','선장 및 승무원 지시에 절대 복종','선상 흡연 금지 (화재 위험)','갑판 이동 시 안전 손잡이 필수 이용','개인 소지품 분실에 대한 회사 책임 없음'],vio:['안전 수칙 위반 시 즉시 하선 조치','손상·분실 시 변상 처리']},
 };
 
-let facs={}, active='헬스장', design='blue', rules={req:[],vio:[]};
+let facs={}, active='헬스장', design='blue', rules={req:[],vio:[]}, initialized=false;
 
 function save(){
   const data=JSON.stringify({facs,active,design});
@@ -310,7 +310,7 @@ function syncToFac(){
 function onChange(){syncToFac();save();render();}
 
 function loadFac(name){
-  syncToFac();
+  if(initialized) syncToFac();
   active=name;
   const f=facs[name]||{};
   set('f-co', f.co||'위플렉스(주)');
@@ -335,6 +335,7 @@ function loadFac(name){
   rules.vio=[...(f.vio||[])];
   renderRules();render();save();
   document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('active',b.dataset.n===name));
+  initialized=true;
 }
 
 function buildGrid(){
