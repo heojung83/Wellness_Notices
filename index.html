@@ -633,11 +633,17 @@ function set(id,val){const el=document.getElementById(id);if(el)el.value=val||''
     localStorage.removeItem('__test__');
   }catch(e){}
 
+  // 이전 세션 지속성 체크
+  const prevSession=localStorage.getItem('__session_check__');
+  localStorage.setItem('__session_check__','active');
+  const dataClearedByBrowser=!prevSession&&localStorage.getItem(KEY);
+  // (이전에 저장했는데 세션 체크가 없다면 브라우저가 지운 것)
+
   // 1순위: localStorage
   if(lsOk){
     try{stored=JSON.parse(localStorage.getItem(KEY));}catch{}
   }
-  // 2순위: div data-state (HTML 파일 저장 방식)
+  // 2순위: div data-state
   if(!stored){
     try{
       const el=document.getElementById('weplex-saved-data');
@@ -661,13 +667,24 @@ function set(id,val){const el=document.getElementById(id);if(el)el.value=val||''
   const el=document.getElementById('saveInd');
   if(!lsOk){
     el.style.color='#e53935';
-    el.innerHTML='⚠ 브라우저가 저장을 차단하고 있어요';
-  } else if(stored&&stored.facs){
+    el.innerHTML='⚠ 저장 불가 — Chrome 설정 확인 필요';
+    setTimeout(()=>alert('⚠ 브라우저가 데이터 저장을 차단하고 있어요!\n\nChrome 주소창에 입력하세요:\nchrome://settings/cookies\n\n→ "창을 닫을 때 쿠키 및 사이트 데이터 지우기" OFF\n→ "항상 쿠키를 사용할 수 있는 사이트"에 이 사이트 주소 추가'),500);
+  } else if(!stored||!stored.facs||Object.keys(stored.facs).length===0){
+    // 저장 데이터 없음 - 첫 방문이거나 지워진 경우
+    el.innerHTML='<span class="save-dot"></span>&nbsp;자동저장 중';
+    // 이전에 저장한 흔적이 없으면 Chrome 설정 안내
+    if(!prevSession){
+      setTimeout(()=>{
+        const banner=document.createElement('div');
+        banner.style.cssText='position:fixed;top:48px;left:0;right:0;background:#FFF3E0;border-bottom:2px solid #FF9800;padding:10px 20px;font-size:12px;color:#E65100;z-index:300;display:flex;align-items:center;justify-content:space-between;';
+        banner.innerHTML='⚠ 데이터가 자동저장 안 될 수 있어요. Chrome 설정 → <strong>chrome://settings/cookies</strong> → "창을 닫을 때 쿠키 및 사이트 데이터 지우기" <strong>OFF</strong> 확인 후 백업을 불러오세요. <button onclick="this.parentNode.remove()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#E65100;">✕</button>';
+        document.body.appendChild(banner);
+      },800);
+    }
+  } else {
     const cnt=Object.keys(stored.facs).length;
     el.innerHTML='<span class="save-dot"></span>&nbsp;저장된 시설 '+cnt+'개 불러옴';
     setTimeout(()=>{el.style.color='';el.innerHTML='<span class="save-dot"></span>&nbsp;자동저장 중';},3000);
-  } else {
-    el.innerHTML='<span class="save-dot"></span>&nbsp;자동저장 중';
   }
 })();
 </script>
