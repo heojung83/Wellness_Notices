@@ -625,16 +625,27 @@ function set(id,val){const el=document.getElementById(id);if(el)el.value=val||''
 
 (function init(){
   let stored=null;
-  // 1순위: 파일 내 저장된 데이터 (div hidden)
+  // localStorage 테스트
+  let lsOk=false;
   try{
-    const el=document.getElementById('weplex-saved-data');
-    const raw=el?el.getAttribute('data-state'):'';
-    if(raw&&raw!=='null'&&raw!==''){stored=JSON.parse(raw);}
+    localStorage.setItem('__test__','1');
+    lsOk=localStorage.getItem('__test__')==='1';
+    localStorage.removeItem('__test__');
   }catch(e){}
-  // 2순위: localStorage
-  if(!stored){
+
+  // 1순위: localStorage
+  if(lsOk){
     try{stored=JSON.parse(localStorage.getItem(KEY));}catch{}
   }
+  // 2순위: div data-state (HTML 파일 저장 방식)
+  if(!stored){
+    try{
+      const el=document.getElementById('weplex-saved-data');
+      const raw=el?el.getAttribute('data-state'):'';
+      if(raw&&raw!=='null'&&raw!==''){stored=JSON.parse(raw);}
+    }catch(e){}
+  }
+
   if(stored&&stored.facs&&Object.keys(stored.facs).length>0){
     facs=stored.facs;
     active=stored.active||Object.keys(facs)[0];
@@ -645,6 +656,19 @@ function set(id,val){const el=document.getElementById(id);if(el)el.value=val||''
     active='헬스장';design='blue';
   }
   setDesign(design);buildGrid();loadFac(active);
+
+  // 상태 표시
+  const el=document.getElementById('saveInd');
+  if(!lsOk){
+    el.style.color='#e53935';
+    el.innerHTML='⚠ 브라우저가 저장을 차단하고 있어요';
+  } else if(stored&&stored.facs){
+    const cnt=Object.keys(stored.facs).length;
+    el.innerHTML='<span class="save-dot"></span>&nbsp;저장된 시설 '+cnt+'개 불러옴';
+    setTimeout(()=>{el.style.color='';el.innerHTML='<span class="save-dot"></span>&nbsp;자동저장 중';},3000);
+  } else {
+    el.innerHTML='<span class="save-dot"></span>&nbsp;자동저장 중';
+  }
 })();
 </script>
 </body>
